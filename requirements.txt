@@ -1,0 +1,8 @@
+Flask
+Flask-SQLAlchemy
+Flask-CORS
+Flask-Admin
+Flask-Login
+Werkzeug
+Flask-WTF
+psycopg2-binary

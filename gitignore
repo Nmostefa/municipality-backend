@@ -1,0 +1,8 @@
+# Ignore database file
+*.db
+# Ignore Python virtual environment
+venv/
+# Ignore __pycache__
+__pycache__/
+# Ignore the 'data' folder (which contains the SQLite DB and its git repo)
+data/
