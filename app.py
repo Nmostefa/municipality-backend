@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, redirect, url_for, flash, render_template
-from flask_cors import CORS
+from flask_cors import CORS # تأكد من استيراد CORS
 from flask_sqlalchemy import SQLAlchemy
 import os
 from datetime import date, datetime
@@ -21,7 +21,12 @@ from wtforms.validators import DataRequired, EqualTo, Optional
 # ----------------------------------------------------------
 
 app = Flask(__name__)
-CORS(app)
+
+# --- تعديل تهيئة CORS هنا ---
+# بدلاً من CORS(app)، سنحدد المصادر المسموح بها بشكل صريح
+# هذا يسمح لـ Netlify بالوصول إلى الـ API
+CORS(app, resources={r"/api/*": {"origins": ["https://apcdirah-dz.netlify.app", "http://localhost:5173"]}})
+# ----------------------------------------------------------
 
 # إعداد قاعدة البيانات PostgreSQL
 # استخدم متغير بيئة (Environment Variable) لقاعدة البيانات
