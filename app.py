@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, redirect, url_for, flash, render_template
-from flask_cors import CORS # تأكد من استيراد CORS
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 import os
 from datetime import date, datetime
@@ -351,6 +351,13 @@ def get_deliberations():
 def get_decisions():
     decisions = Decision.query.order_by(Decision.date.desc()).all()
     return jsonify([decision.to_dict() for decision in decisions])
+
+# --- إضافة مسار API للخدمات هنا ---
+@app.route('/api/services', methods=['GET'])
+def get_services():
+    services = Service.query.all()
+    return jsonify([service.to_dict() for service in services])
+# -----------------------------------
 
 @app.route('/api/settings', methods=['GET']) # <--- هذا هو API الجديد لإعدادات الموقع
 def get_settings():
