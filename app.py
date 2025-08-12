@@ -1,3 +1,4 @@
+import os # أضف هذا السطر
 from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin, AdminIndexView, expose
@@ -54,33 +55,33 @@ class User(db.Model, UserMixin):
 
 # --- WTForms Forms ---
 class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
-    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
-    submit = SubmitField('Sign Up')
+    username = StringField('اسم المستخدم', validators=[DataRequired(), Length(min=2, max=20)])
+    email = StringField('البريد الإلكتروني', validators=[DataRequired(), Email()])
+    password = PasswordField('كلمة المرور', validators=[DataRequired(), Length(min=6)])
+    confirm_password = PasswordField('تأكيد كلمة المرور', validators=[DataRequired(), EqualTo('password', message='كلمتا المرور غير متطابقتين')])
+    submit = SubmitField('تسجيل حساب جديد')
 
     def validate_username(self, username):
         """Validates if the username is already taken."""
         user = User.query.filter_by(username=username.data).first()
         if user:
-            raise ValidationError('That username is taken. Please choose a different one.')
+            raise ValidationError('اسم المستخدم هذا مستخدم بالفعل. الرجاء اختيار اسم آخر.')
 
     def validate_email(self, email):
         """Validates if the email is already taken and is a valid email format."""
         try:
             validate_email(email.data)
         except EmailNotValidError:
-            raise ValidationError('Invalid email address.')
+            raise ValidationError('صيغة البريد الإلكتروني غير صحيحة.')
         user = User.query.filter_by(email=email.data).first()
         if user:
-            raise ValidationError('That email is taken. Please choose a different one.')
+            raise ValidationError('البريد الإلكتروني هذا مستخدم بالفعل. الرجاء اختيار بريد آخر.')
 
 class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    remember = BooleanField('Remember Me')
-    submit = SubmitField('Login')
+    email = StringField('البريد الإلكتروني', validators=[DataRequired(), Email()])
+    password = PasswordField('كلمة المرور', validators=[DataRequired()])
+    remember = BooleanField('تذكرني')
+    submit = SubmitField('تسجيل الدخول')
 
 # --- Flask-Admin Custom Views ---
 class MyAdminIndexView(AdminIndexView):
@@ -91,7 +92,7 @@ class MyAdminIndexView(AdminIndexView):
 
     def inaccessible_callback(self, name, **kwargs):
         """Redirects to login page if user doesn't have admin access."""
-        flash('You do not have permission to access the admin panel. Please log in as an administrator.', 'danger')
+        flash('ليس لديك إذن للوصول إلى لوحة الإدارة. الرجاء تسجيل الدخول كمسؤول.', 'danger')
         return redirect(url_for('login', next=request.url))
 
 class UserAdminView(ModelView):
@@ -99,76 +100,81 @@ class UserAdminView(ModelView):
     column_list = ('id', 'username', 'email', 'is_admin')
     column_searchable_list = ('username', 'email')
     column_filters = ('is_admin',)
-    form_columns = ('username', 'email', 'password', 'is_admin') # Include password for forms
+    # form_columns will be dynamically set by get_create_form/get_edit_form
+    # Password field will be handled by on_model_change
 
     def on_model_change(self, form, model, is_created):
         """Hashes the password before saving the user to the database."""
         # Only hash password if it's provided in the form, and it's not empty
+        # For edit, if password field is Optional and left blank, form.password.data will be None
         if form.password.data:
             model.set_password(form.password.data)
         # If it's a new user being created and no password was provided (should be caught by form validation)
-        # Or if the password field was made optional and left blank on edit,
-        # we don't change the password.
         elif is_created and not form.password.data:
-            raise ValidationError('Password is required for new users.')
+            raise ValidationError('كلمة المرور مطلوبة للمستخدمين الجدد.')
 
 
     def get_create_form(self):
         """Returns the form class to be used when creating a new user."""
         class CreateUserForm(FlaskForm):
-            username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
-            email = StringField('Email', validators=[DataRequired(), Email()])
-            password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
-            confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
-            is_admin = BooleanField('Is Admin')
+            username = StringField('اسم المستخدم', validators=[DataRequired(), Length(min=2, max=20)])
+            email = StringField('البريد الإلكتروني', validators=[DataRequired(), Email()])
+            password = PasswordField('كلمة المرور', validators=[DataRequired(), Length(min=6)])
+            confirm_password = PasswordField('تأكيد كلمة المرور', validators=[DataRequired(), EqualTo('password', message='كلمتا المرور غير متطابقتين')])
+            is_admin = BooleanField('مسؤول؟')
 
             def validate_username(self, username_field):
                 """Validates uniqueness of username for new users."""
                 user = User.query.filter_by(username=username_field.data).first()
                 if user:
-                    raise ValidationError('That username is already taken. Please choose a different one.')
+                    raise ValidationError('اسم المستخدم هذا مستخدم بالفعل. الرجاء اختيار اسم آخر.')
 
             def validate_email(self, email_field):
                 """Validates uniqueness and format of email for new users."""
                 try:
                     validate_email(email_field.data)
                 except EmailNotValidError:
-                    raise ValidationError('Invalid email address format.')
+                    raise ValidationError('صيغة البريد الإلكتروني غير صحيحة.')
                 user = User.query.filter_by(email=email_field.data).first()
                 if user:
-                    raise ValidationError('That email is already taken. Please choose a different one.')
+                    raise ValidationError('البريد الإلكتروني هذا مستخدم بالفعل. الرجاء اختيار بريد آخر.')
         return CreateUserForm
 
     def get_edit_form(self):
         """Returns the form class to be used when editing an existing user."""
         class EditUserForm(FlaskForm):
-            username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
-            email = StringField('Email', validators=[DataRequired(), Email()])
+            username = StringField('اسم المستخدم', validators=[DataRequired(), Length(min=2, max=20)])
+            email = StringField('البريد الإلكتروني', validators=[DataRequired(), Email()])
             # Password and confirm_password are optional on edit
-            password = PasswordField('Password', validators=[Optional(), Length(min=6)])
-            confirm_password = PasswordField('Confirm Password', validators=[Optional(), EqualTo('password', message='Passwords must match')])
-            is_admin = BooleanField('Is Admin')
+            password = PasswordField('كلمة المرور (اترك فارغاً لعدم التغيير)', validators=[Optional(), Length(min=6)])
+            confirm_password = PasswordField('تأكيد كلمة المرور (اترك فارغاً لعدم التغيير)', validators=[Optional(), EqualTo('password', message='كلمتا المرور غير متطابقتين')])
+            is_admin = BooleanField('مسؤول؟')
+
+            def __init__(self, *args, **kwargs):
+                super(EditUserForm, self).__init__(*args, **kwargs)
+                # Store the original model instance if available
+                self.original_obj = kwargs.get('obj') # This is the key line to get the current object
 
             def validate_username(self, username_field):
                 """Validates uniqueness of username for existing users (allows current user's username)."""
-                # self.obj contains the current model instance being edited by Flask-Admin
-                if username_field.data != self.obj.username: # Only validate if username has changed
+                if self.original_obj and username_field.data != self.original_obj.username:
                     user = User.query.filter_by(username=username_field.data).first()
                     if user:
-                        raise ValidationError('That username is already taken by another user.')
+                        raise ValidationError('اسم المستخدم هذا مستخدم بالفعل من قبل مستخدم آخر.')
 
             def validate_email(self, email_field):
                 """Validates uniqueness and format of email for existing users (allows current user's email)."""
                 try:
                     validate_email(email_field.data)
                 except EmailNotValidError:
-                    raise ValidationError('Invalid email address format.')
-                if email_field.data != self.obj.email: # Only validate if email has changed
+                    raise ValidationError('صيغة البريد الإلكتروني غير صحيحة.')
+                if self.original_obj and email_field.data != self.original_obj.email:
                     user = User.query.filter_by(email=email_field.data).first()
                     if user:
-                        raise ValidationError('That email is already taken by another user.')
+                        raise ValidationError('البريد الإلكتروني هذا مستخدم بالفعل من قبل مستخدم آخر.')
 
         return EditUserForm
+
 
     def is_accessible(self):
         """Checks if the current user is authenticated and is an admin for this view."""
@@ -176,11 +182,11 @@ class UserAdminView(ModelView):
 
     def inaccessible_callback(self, name, **kwargs):
         """Redirects to login if not accessible."""
-        flash('You do not have permission to access this page.', 'danger')
+        flash('ليس لديك إذن للوصول إلى هذه الصفحة.', 'danger')
         return redirect(url_for('login', next=request.url))
 
 # Initialize Flask-Admin
-admin = Admin(app, name='Admin Panel', template_mode='bootstrap3', index_view=MyAdminIndexView())
+admin = Admin(app, name='لوحة تحكم بلدية ديرة', template_mode='bootstrap3', index_view=MyAdminIndexView())
 
 # Add Flask-Admin views
 admin.add_view(UserAdminView(User, db.session))
@@ -190,7 +196,7 @@ admin.add_view(UserAdminView(User, db.session))
 @app.route("/home")
 def home():
     """Renders the home page."""
-    return render_template('home.html', title='Home')
+    return render_template('home.html', title='الرئيسية')
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -203,9 +209,9 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash('Your account has been created! You are now able to log in', 'success')
+        flash('تم إنشاء حسابك بنجاح! يمكنك الآن تسجيل الدخول.', 'success')
         return redirect(url_for('login'))
-    return render_template('register.html', title='Register', form=form)
+    return render_template('register.html', title='تسجيل حساب جديد', form=form)
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -218,11 +224,11 @@ def login():
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
-            flash('Login successful!', 'success')
+            flash('تم تسجيل الدخول بنجاح!', 'success')
             return redirect(next_page or url_for('home'))
         else:
-            flash('Login Unsuccessful. Please check email and password', 'danger')
-    return render_template('login.html', title='Login', form=form)
+            flash('فشل تسجيل الدخول. الرجاء التحقق من البريد الإلكتروني وكلمة المرور.', 'danger')
+    return render_template('login.html', title='تسجيل الدخول', form=form)
 
 @app.route("/logout")
 @login_required
@@ -235,7 +241,7 @@ def logout():
 @login_required
 def dashboard():
     """Renders the user dashboard (requires login)."""
-    return render_template('dashboard.html', title='Dashboard')
+    return render_template('dashboard.html', title='لوحة التحكم')
 
 # --- Main execution ---
 if __name__ == '__main__':
@@ -249,4 +255,5 @@ if __name__ == '__main__':
             db.session.add(admin_user)
             db.session.commit()
             print("Default admin user created.")
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000)) # احصل على المنفذ من متغير البيئة أو استخدم 5000
+    app.run(host='0.0.0.0', port=port, debug=True) # اجعل التطبيق يستمع على جميع الواجهات
