@@ -150,8 +150,12 @@ class AuthenticatedModelView(ModelView):
 
 # --- فئة مخصصة لـ User ModelView لمعالجة كلمة المرور ---
 class UserAdminView(AuthenticatedModelView):
+    # 📌 التعديل هنا: تحديد النموذج المخصص كـ 'form' attribute للكلاس
+    form = UserForm 
+    
     column_exclude_list = ['password_hash']
-    form_columns = ['username', 'password', 'confirm_password'] # تأكد من وجود هذه الحقول في النموذج
+    # 'password' و 'confirm_password' يتم التعامل معهما عبر UserForm
+    form_columns = ['username', 'password', 'confirm_password'] 
 
     def on_model_change(self, form, model, is_created):
         if form.password.data:
@@ -186,7 +190,8 @@ admin.add_view(AuthenticatedModelView(Deliberation, db.session, name='المدا
 admin.add_view(AuthenticatedModelView(Decision, db.session, name='القرارات'))
 admin.add_view(SiteSettingAdminView(SiteSetting, db.session, name='إعدادات الموقع'))
 admin.add_view(AuthenticatedModelView(Service, db.session, name='الخدمات'))
-admin.add_view(UserAdminView(User, db.session, name='المستخدمون', form=UserForm)) # استخدام UserForm هنا
+# 📌 التعديل هنا: تم حذف الوسيط 'form=UserForm'
+admin.add_view(UserAdminView(User, db.session, name='المستخدمون')) 
 
 # --- تعريف الـ APIs ---
 @app.route('/api/projects', methods=['GET'])
@@ -244,7 +249,7 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('admin.index'))
 
-    form = UserForm() # استخدام UserForm لنموذج تسجيل الدخول (اختياري، لكن يمكن استخدامه)
+    # استخدام UserForm لنموذج تسجيل الدخول (اختياري، لكن يمكن استخدامه)
     # لا نستخدم form.validate_on_submit() هنا، بل نتحقق يدوياً
     if request.method == 'POST':
         username = request.form['username']
@@ -257,7 +262,7 @@ def login():
             return redirect(next_page or url_for('admin.index'))
         else:
             flash('اسم المستخدم أو كلمة المرور غير صحيحة.', 'danger')
-    
+            
     return render_template('login.html')
 
 @app.route('/logout')
@@ -313,4 +318,3 @@ if __name__ == '__main__':
         # ---------------------------------------------------------------------------------
 
     app.run(debug=True, host='0.0.0.0', port=os.environ.get('PORT', 5000)) # استخدام متغير PORT لـ Render
-
