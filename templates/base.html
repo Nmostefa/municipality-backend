@@ -17,12 +17,14 @@
             font-family: 'Cairo', sans-serif;
             background-color: #f8f9fa; /* Light background for the page */
         }
+        /* Make sure the navbar background is explicitly white and visible */
         .navbar {
             box-shadow: 0 2px 4px rgba(0,0,0,.04);
             background-color: #ffffff !important; /* White background for navbar */
         }
         .navbar-brand {
             font-weight: 700;
+            /* Using !important for color to override any Bootstrap defaults */
             color: #0056b3 !important; /* Darker blue for brand name */
             display: flex; /* Allow flex properties for alignment */
             align-items: center; /* Center items vertically */
@@ -30,6 +32,7 @@
         .navbar-brand img {
             height: 40px; /* Adjust logo height as needed */
             margin-inline-end: 10px; /* Space between logo and text for RTL */
+            vertical-align: middle; /* Ensure image is vertically aligned with text */
         }
         .navbar-nav .nav-link {
             color: #0056b3 !important; /* Darker blue for nav links */
@@ -75,7 +78,7 @@
             <a class="navbar-brand" href="{{ url_for('home') }}">
                 <!-- Add your logo here -->
                 <img src="{{ url_for('static', filename='images/logo.png') }}" alt="شعار بلدية ديرة" class="d-inline-block align-text-top">
-                بلدية ديرة
+                <span class="d-none d-sm-inline">بلدية ديرة</span> <!-- Added span for better control, hidden on very small screens if needed -->
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
