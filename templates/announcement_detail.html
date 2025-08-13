@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-6 text-center">{{ announcement.title }}</h1>
+        
+        <div class="flex justify-center mb-6">
+            {% if announcement.announcement_image_url %}
+            <img src="{{ announcement.announcement_image_url }}" 
+                 alt="{{ announcement.title }}" 
+                 class="max-w-full h-auto rounded-lg shadow-md"
+                 onerror="this.onerror=null;this.src='https://placehold.co/800x600/cccccc/333333?text=لا توجد صورة';"
+            >
+            {% else %}
+            <img src="https://placehold.co/800x600/cccccc/333333?text=لا توجد صورة" 
+                 alt="No Image Available" 
+                 class="max-w-full h-auto rounded-lg shadow-md"
+            >
+            {% endif %}
+        </div>
+
+        <div class="text-gray-700 leading-relaxed text-lg mb-8">
+            <p class="mb-4">{{ announcement.content | safe }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-600 text-sm mb-8 border-t border-b py-4">
+            <div>
+                <p class="mb-1"><strong class="text-gray-800">تاريخ النشر:</strong> {{ announcement.date_published.strftime('%Y-%m-%d %H:%M') }}</p>
+                {% if announcement.author %}
+                <p class="mb-1"><strong class="text-gray-800">الناشر:</strong> {{ announcement.author }}</p>
+                {% endif %}
+            </div>
+            <div>
+                {% if announcement.announcement_type %}
+                <p class="mb-1"><strong class="text-gray-800">النوع:</strong> {{ announcement.announcement_type }}</p>
+                {% endif %}
+                {% if announcement.deadline %}
+                <p class="mb-1"><strong class="text-gray-800">الموعد النهائي:</strong> {{ announcement.deadline.strftime('%Y-%m-%d') }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if announcement.document_url %}
+        <div class="text-center mb-6">
+            <a href="{{ announcement.document_url }}" 
+               target="_blank" 
+               class="inline-flex items-center bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors duration-300">
+               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+               تحميل المستند
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="text-center">
+            <a href="{{ url_for('announcements_list') }}" 
+               class="inline-block text-blue-600 hover:text-blue-800 transition-colors duration-300">
+               &larr; العودة إلى قائمة الإعلانات
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

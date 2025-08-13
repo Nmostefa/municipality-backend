@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
+from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
@@ -354,6 +354,27 @@ def dashboard():
     # Also pass 'now' to the dashboard if it uses base.html
     return render_template('dashboard.html', title='لوحة التحكم', now=datetime.utcnow())
 
+# New route to display all announcements
+@app.route("/announcements")
+def announcements_list():
+    """Displays a list of all announcements."""
+    all_announcements = Announcement.query.order_by(Announcement.date_published.desc()).all()
+    return render_template('announcements.html', 
+                           title='الإعلانات', 
+                           announcements=all_announcements, 
+                           now=datetime.utcnow())
+
+# New route to display a single announcement by ID
+@app.route("/announcement/<int:announcement_id>")
+def announcement_detail(announcement_id):
+    """Displays details of a single announcement."""
+    announcement = db.session.get(Announcement, announcement_id)
+    if announcement is None:
+        abort(404) # Return 404 Not Found if announcement does not exist
+    return render_template('announcement_detail.html', 
+                           title=announcement.title, 
+                           announcement=announcement, 
+                           now=datetime.utcnow())
 
 # --- API Endpoint for Announcements ---
 @app.route("/api/announcements", methods=['GET'])
