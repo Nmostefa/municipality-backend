@@ -10,14 +10,13 @@ from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextA
 from wtforms.validators import DataRequired, EqualTo, Email, Length, Optional, ValidationError
 from email_validator import validate_email, EmailNotValidError
 from flask_migrate import Migrate
-from datetime import datetime # تأكد من استيراد datetime
+from datetime import datetime
+from flask.cli import with_appcontext # أضف هذا الاستيراد
 
 # Initialize Flask app
 app = Flask(__name__)
 # Change this to a strong, random key in production
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_strong_random_secret_key_here_for_production')
-# Use SQLite for development (consider for local development only)
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 # For production on Render, use PostgreSQL:
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -32,7 +31,7 @@ login_manager.login_view = 'login' # Set the login view
 # User loader for Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.get(User, int(user_id)) # Use db.session.get for SQLAlchemy 1.4+
+    return db.session.get(User, int(user_id))
 
 # --- Database Models ---
 class User(db.Model, UserMixin):
@@ -43,15 +42,12 @@ class User(db.Model, UserMixin):
     is_admin = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
-        """Hashes the password and stores it."""
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        """Checks if the provided password matches the stored hash."""
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        """String representation of the User object."""
         return f"User('{self.username}', '{self.email}')"
 
 class Project(db.Model):
@@ -356,16 +352,32 @@ def dashboard():
     return render_template('dashboard.html', title='لوحة التحكم')
 
 # --- Main execution ---
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all() # Creates tables based on models
-        # Create a default admin user if one doesn't exist for initial setup
-        if not User.query.filter_by(is_admin=True).first():
-            print("Creating default admin user: admin@example.com / adminpass")
-            admin_user = User(username='admin', email='admin@example.com', is_admin=True)
-            admin_user.set_password('adminpass')
-            db.session.add(admin_user)
-            db.session.commit()
-            print("Default admin user created.")
-    port = int(os.environ.get('PORT', 5000)) # Get port from environment variable or use 5000
-    app.run(host='0.0.0.0', port=port, debug=True) # Make the app listen on all interfaces
+# قم بإزالة هذه الكتلة بالكامل أو قم بتعليقها
+# if __name__ == '__main__':
+#    with app.app_context():
+#        db.create_all()
+#        if not User.query.filter_by(is_admin=True).first():
+#            print("Creating default admin user: admin@example.com / adminpass")
+#            admin_user = User(username='admin', email='admin@example.com', is_admin=True)
+#            admin_user.set_password('adminpass')
+#            db.session.add(admin_user)
+#            db.session.commit()
+#            print("Default admin user created.")
+#    port = int(os.environ.get('PORT', 5000))
+#    app.run(host='0.0.0.0', port=port, debug=True)
+
+# أمر Flask CLI لإنشاء المستخدم الإداري
+@app.cli.command("create-admin")
+@with_appcontext
+def create_admin_command():
+    """Creates a default admin user if one does not exist."""
+    print("Checking for existing admin user...")
+    if not User.query.filter_by(is_admin=True).first():
+        print("No admin user found. Creating default admin user: admin@example.com / adminpass")
+        admin_user = User(username='admin', email='admin@example.com', is_admin=True)
+        admin_user.set_password('adminpass')
+        db.session.add(admin_user)
+        db.session.commit()
+        print("Default admin user created successfully.")
+    else:
+        print("Admin user already exists. Skipping creation.")
