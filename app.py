@@ -10,7 +10,7 @@ from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextA
 from wtforms.validators import DataRequired, EqualTo, Email, Length, Optional, ValidationError
 from email_validator import validate_email, EmailNotValidError
 from flask_migrate import Migrate
-from datetime import datetime
+from datetime import datetime # تأكد من وجود هذا الاستيراد
 from flask.cli import with_appcontext
 
 # Initialize Flask app
@@ -304,8 +304,9 @@ admin.add_view(DepartmentAdminView(Department, db.session, name='الأقسام'
 @app.route("/")
 @app.route("/home")
 def home():
-    """Renders the home page."""
-    return render_template('home.html', title='الرئيسية')
+    """Renders the home page, passing the current year to the template."""
+    # Pass the current datetime object to the template
+    return render_template('home.html', title='الرئيسية', now=datetime.utcnow())
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -350,7 +351,9 @@ def logout():
 @login_required
 def dashboard():
     """Renders the user dashboard (requires login)."""
-    return render_template('dashboard.html', title='لوحة التحكم')
+    # Also pass 'now' to the dashboard if it uses base.html
+    return render_template('dashboard.html', title='لوحة التحكم', now=datetime.utcnow())
+
 
 # --- API Endpoint for Announcements ---
 @app.route("/api/announcements", methods=['GET'])
