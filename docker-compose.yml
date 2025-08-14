@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: municipality_db # اسم قاعدة البيانات
+      POSTGRES_USER: admin_user    # اسم المستخدم
+      POSTGRES_PASSWORD: admin_password # كلمة المرور (غيّرها في الإنتاج)
+    ports:
+      - "5432:5432" # المنفذ: المضيف -> الحاوية
+    volumes:
+      - db_data:/var/lib/postgresql/data # لتخزين البيانات بشكل دائم
+
+volumes:
+  db_data:

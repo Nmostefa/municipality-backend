@@ -1,8 +1,8 @@
-"""Create initial tables
+"""Initial PostgreSQL setup and announcement image URL
 
-Revision ID: 1fc1ce9d70f9
+Revision ID: 2c5388abf303
 Revises: 
-Create Date: 2025-08-12 16:07:38.352667
+Create Date: 2025-08-14 14:17:45.946724
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '1fc1ce9d70f9'
+revision = '2c5388abf303'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -26,7 +26,7 @@ def upgrade():
     sa.Column('author', sa.String(length=80), nullable=True),
     sa.Column('announcement_type', sa.String(length=50), nullable=True),
     sa.Column('document_url', sa.String(length=255), nullable=True),
-    sa.Column('image_url', sa.String(length=255), nullable=True),
+    sa.Column('announcement_image_url', sa.String(length=255), nullable=True),
     sa.Column('deadline', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )

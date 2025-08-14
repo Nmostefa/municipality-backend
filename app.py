@@ -10,8 +10,11 @@ from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextA
 from wtforms.validators import DataRequired, EqualTo, Email, Length, Optional, ValidationError
 from email_validator import validate_email, EmailNotValidError
 from flask_migrate import Migrate
-from datetime import datetime # تأكد من وجود هذا الاستيراد
+from datetime import datetime
 from flask.cli import with_appcontext
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -38,7 +41,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False) # <--- تم تغيير هذا السطر من 128 إلى 255
     is_admin = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
@@ -59,7 +62,7 @@ class Project(db.Model):
     budget = db.Column(db.Float, nullable=True)
     contractor = db.Column(db.String(255), nullable=True)
     start_date = db.Column(db.String(10), nullable=True) # YYYY-MM-DD
-    end_date = db.Column(db.String(10), nullable=True)   # YYYY-MM-DD
+    end_date = db.Column(db.String(10), nullable=True)    # YYYY-MM-DD
     progress_percentage = db.Column(db.Integer, default=0)
     image_url = db.Column(db.String(255), nullable=True)
     
@@ -321,7 +324,7 @@ def register():
         db.session.commit()
         flash('تم إنشاء حسابك بنجاح! يمكنك الآن تسجيل الدخول.', 'success')
         return redirect(url_for('login'))
-    return render_template('register.html', title='تسجيل حساب جديد', form=form)
+    return render_template('register.html', title='تسجيل حساب جديد', form=form, now=datetime.utcnow()) # <--- تم تعديل هذا السطر
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -338,7 +341,7 @@ def login():
             return redirect(next_page or url_for('home'))
         else:
             flash('فشل تسجيل الدخول. الرجاء التحقق من البريد الإلكتروني وكلمة المرور.', 'danger')
-    return render_template('login.html', title='تسجيل الدخول', form=form)
+    return render_template('login.html', title='تسجيل الدخول', form=form, now=datetime.utcnow()) # <--- تم تعديل هذا السطر
 
 @app.route("/logout")
 @login_required
@@ -360,9 +363,9 @@ def announcements_list():
     """Displays a list of all announcements."""
     all_announcements = Announcement.query.order_by(Announcement.date_published.desc()).all()
     return render_template('announcements.html', 
-                           title='الإعلانات', 
-                           announcements=all_announcements, 
-                           now=datetime.utcnow())
+                            title='الإعلانات', 
+                            announcements=all_announcements, 
+                            now=datetime.utcnow())
 
 # New route to display a single announcement by ID
 @app.route("/announcement/<int:announcement_id>")
@@ -372,9 +375,9 @@ def announcement_detail(announcement_id):
     if announcement is None:
         abort(404) # Return 404 Not Found if announcement does not exist
     return render_template('announcement_detail.html', 
-                           title=announcement.title, 
-                           announcement=announcement, 
-                           now=datetime.utcnow())
+                            title=announcement.title, 
+                            announcement=announcement, 
+                            now=datetime.utcnow())
 
 # --- API Endpoint for Announcements ---
 @app.route("/api/announcements", methods=['GET'])
@@ -387,19 +390,19 @@ def get_announcements_api():
 # --------------------------------------------------
 
 # --- Main execution ---
-# قم بإزالة هذه الكتلة بالكامل أو قم بتعليقها
+# قم بإزالة هذه الكتلة بالكامل أو قم بتعليقها (كما هو موضح في الكود الأصلي)
 # if __name__ == '__main__':
-#    with app.app_context():
-#        db.create_all()
-#        if not User.query.filter_by(is_admin=True).first():
-#            print("Creating default admin user: admin@example.com / adminpass")
-#            admin_user = User(username='admin', email='admin@example.com', is_admin=True)
-#            admin_user.set_password('adminpass')
-#            db.session.add(admin_user)
-#            db.session.commit()
-#            print("Default admin user created.")
-#    port = int(os.environ.get('PORT', 5000))
-#    app.run(host='0.0.0.0', port=port, debug=True)
+#     with app.app_context():
+#         db.create_all()
+#         if not User.query.filter_by(is_admin=True).first():
+#             print("Creating default admin user: admin@example.com / adminpass")
+#             admin_user = User(username='admin', email='admin@example.com', is_admin=True)
+#             admin_user.set_password('adminpass')
+#             db.session.add(admin_user)
+#             db.session.commit()
+#             print("Default admin user created.")
+#     port = int(os.environ.get('PORT', 5000))
+#     app.run(host='0.0.0.0', port=port, debug=True)
 
 # أمر Flask CLI لإنشاء المستخدم الإداري
 @app.cli.command("create-admin")
